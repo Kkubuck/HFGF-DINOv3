@@ -26,11 +26,11 @@ from detectron2.utils.logger import setup_logger
 
 from hfgf_dinov3 import HFGFDatasetMapper, load_config
 from hfgf_dinov3.checkpoint import initialize_backbone, load_trained_weights
-from hfgf_dinov3.evaluation.evaluation import CODEvaluator
+from hfgf_dinov3.evaluation import CODEvaluator
 
 
 class HFGFTrainer(DefaultTrainer):
-    """AdamW training with the retained augmentation and loss configuration."""
+    """Detectron2 trainer with AdamW, per-module learning rates and full-model gradient clipping."""
 
     def __init__(self, cfg):
         TrainerBase.__init__(self)
@@ -87,7 +87,7 @@ class HFGFTrainer(DefaultTrainer):
                     continue
                 seen.add(parameter)
                 options = copy.copy(defaults)
-                # The original recipe applies this multiplier to the entire
+                # The paper's recipe applies this multiplier to the entire
                 # ViT-Split/HFGF backbone, including its adaptation modules.
                 if "backbone" in module_name:
                     options["lr"] *= cfg.SOLVER.BACKBONE_MULTIPLIER
@@ -141,7 +141,7 @@ class HFGFTrainer(DefaultTrainer):
 def main(args):
     cfg = load_config(args.config_file, args.opts)
     if cfg.TEST.AUG.ENABLED:
-        raise ValueError("The released evaluation protocol does not use test-time augmentation.")
+        raise ValueError("The paper's evaluation protocol does not use test-time augmentation.")
     default_setup(cfg, args)
     setup_logger(output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="hfgf_dinov3")
     if args.eval_only:

@@ -1,4 +1,4 @@
-# Configuration associated with the retained HFGF-DINOv3 checkpoint.
+# HFGF-DINOv3 (DINOv3 ViT-H+/16): CAMO + COD10K training, 3 GPUs x 3 images.
 MODEL:
   META_ARCHITECTURE: "HFGF_DINOv3"
   BACKBONE:

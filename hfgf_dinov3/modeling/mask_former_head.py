@@ -12,10 +12,16 @@ from detectron2.config import configurable
 from detectron2.layers import ShapeSpec
 from detectron2.modeling import SEM_SEG_HEADS_REGISTRY
 
-from ..pixel_decoder.fpn import build_pixel_decoder
-from ..transformer_decoder.maskformer_transformer_decoder import (
-    build_transformer_decoder,
-)
+from .transformer_decoder import build_transformer_decoder
+
+
+def build_pixel_decoder(cfg, input_shape):
+    """Build the configured pixel decoder with a forward_features interface."""
+    name = cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME
+    model = SEM_SEG_HEADS_REGISTRY.get(name)(cfg, input_shape)
+    if not callable(getattr(model, "forward_features", None)):
+        raise ValueError(f"Pixel decoder {name} must implement forward_features")
+    return model
 
 
 @SEM_SEG_HEADS_REGISTRY.register()

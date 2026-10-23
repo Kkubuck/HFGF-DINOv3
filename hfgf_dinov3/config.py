@@ -1,11 +1,11 @@
-"""Configuration for the released HFGF-DINOv3 model."""
+"""Detectron2 configuration keys for HFGF-DINOv3."""
 
 from detectron2.config import CfgNode as CN, get_cfg
 from detectron2.projects.deeplab import add_deeplab_config
 
 
 def add_hfgf_dinov3_config(cfg):
-    """Register the settings used by the retained training recipe."""
+    """Register HFGF-DINOv3 options and their paper defaults."""
     cfg.MODEL.BACKBONE_WEIGHTS = ""
     cfg.INPUT.DATASET_MAPPER_NAME = "hfgf_dataset_mapper"
     cfg.INPUT.COLOR_AUG_SSD = True

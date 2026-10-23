@@ -12,7 +12,7 @@ dist/
 /datasets/
 /outputs/
 /predictions/
-/third_party/
+/third_party/detectron2/
 *.pth
 *.pt
 *.pkl

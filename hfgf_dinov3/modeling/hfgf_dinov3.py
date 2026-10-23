@@ -16,8 +16,8 @@ from detectron2.structures import ImageList, Instances
 from detectron2.utils.events import get_event_storage
 from detectron2.utils.memory import retry_if_cuda_oom
 
-from .modeling.criterion import SetCriterion
-from .modeling.matcher import HungarianMatcher
+from .criterion import SetCriterion
+from .matcher import HungarianMatcher
 
 
 @META_ARCH_REGISTRY.register()

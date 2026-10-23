@@ -21,7 +21,7 @@ from detectron2.evaluation import DatasetEvaluator
 from detectron2.utils import comm
 from detectron2.utils.file_io import PathManager
 
-from .utils import calc_metrics
+from .metrics import calc_metrics
 
 
 METRIC_NAMES = ("SM", "EM", "WFM", "MAE", "FM")
@@ -45,7 +45,7 @@ def evaluate_mask_pair(task):
 
 
 class CODEvaluator(DatasetEvaluator):
-    """Evaluate CAMO, COD10K, NC4K, or CHAMELEON with the retained protocol.
+    """Evaluate CAMO, COD10K, NC4K, or CHAMELEON with the paper protocol.
 
     The model's merged binary foreground mask is evaluated against the first
     foreground COCO annotation. Metrics are averaged over images in float64.

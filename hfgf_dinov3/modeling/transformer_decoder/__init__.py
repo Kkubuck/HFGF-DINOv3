@@ -1,4 +1,12 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
-from .hfgf_transformer_decoder import MultiScaleMaskedTransformerDecoder
+from .masked_transformer_decoder import (
+    TRANSFORMER_DECODER_REGISTRY,
+    MultiScaleMaskedTransformerDecoder,
+    build_transformer_decoder,
+)
 
-__all__ = ["MultiScaleMaskedTransformerDecoder"]
+__all__ = [
+    "TRANSFORMER_DECODER_REGISTRY",
+    "MultiScaleMaskedTransformerDecoder",
+    "build_transformer_decoder",
+]

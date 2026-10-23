@@ -1,3 +1,4 @@
-from .evaluation import CODEvaluator
+from .evaluator import CODEvaluator
+from .metrics import calc_metrics
 
-__all__ = ["CODEvaluator"]
+__all__ = ["CODEvaluator", "calc_metrics"]

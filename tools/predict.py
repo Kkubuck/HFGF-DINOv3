@@ -3,6 +3,7 @@
 
 import argparse
 from pathlib import Path
+import sys
 
 import numpy as np
 from PIL import Image
@@ -13,8 +14,9 @@ from detectron2.data import DatasetMapper
 from detectron2.modeling import build_model
 from detectron2.utils.env import seed_all_rng
 
-from hfgf_dinov3 import load_config
-from hfgf_dinov3.checkpoint import load_trained_weights
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from hfgf_dinov3 import load_config  # noqa: E402
+from hfgf_dinov3.checkpoint import load_trained_weights  # noqa: E402
 
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}

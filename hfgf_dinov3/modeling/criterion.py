@@ -2,11 +2,8 @@
 # Reference: https://github.com/facebookresearch/Mask2Former/blob/main/mask2former/modeling/criterion.py
 # Modified by Zuyao You (https://github.com/geshang777)
 # ------------------------------------------------------------------------------------------------------
-"""
-MaskFormer criterion.
-"""
+"""Mask2Former set criterion extended with the BaP-HF boundary loss."""
 import torch
-import torch.fft as fft
 import torch.nn.functional as F
 from torch import nn
 
@@ -18,6 +15,7 @@ from detectron2.projects.point_rend.point_features import (
 
 from ..utils.misc import is_dist_avail_and_initialized, nested_tensor_from_tensor_list, _max_by_axis
 from ..utils import box_ops
+from .bap_hf_loss import bap_hf_loss
 
 
 def dice_loss(
@@ -182,7 +180,7 @@ class SetCriterion(nn.Module):
         src_masks = outputs["pred_masks"]
         src_masks = src_masks[src_idx]
         masks = [t["masks"] for t in targets]
-        # Padding is included, matching the released training objective.
+        # Padding is included in the mask targets, as in the paper's training objective.
         target_masks, _ = nested_tensor_from_tensor_list(masks).decompose()
         target_masks = target_masks.to(src_masks)
         target_masks = target_masks[tgt_idx]
@@ -224,13 +222,7 @@ class SetCriterion(nn.Module):
         return losses
 
     def loss_bap_hf(self, outputs, targets, indices, num_masks):
-        """Align high-frequency phases inside the ground-truth boundary band.
-
-        The normalization is over frequency bins, as in the retained training
-        implementation; matched foreground/background regions are summed.
-        """
-        hp = float(self.baphf_highpass)
-
+        """BaP-HF loss on the final matched mask predictions (see bap_hf_loss.py)."""
         if len(targets) == 0:
             zero = outputs["pred_masks"].sum() * 0.0
             return {"loss_bap_hf": zero}
@@ -244,51 +236,9 @@ class SetCriterion(nn.Module):
         tgt_masks = tgt_masks.to(src_masks)
         tgt_masks = tgt_masks[tgt_idx][:, None]  # (N,1,Ht,Wt)
 
-        # upsample preds to GT size
-        src_prob = F.interpolate(
-            src_masks, size=tgt_masks.shape[-2:], mode="bilinear", align_corners=False
-        ).sigmoid()
-
-        # Morphological boundary band, smoothed with average pooling.
-        with torch.no_grad():
-            k = max(1, int(self.baphf_band_kernel))
-            pad = k // 2
-            max_m = F.max_pool2d(tgt_masks, kernel_size=k, stride=1, padding=pad)
-            min_m = -F.max_pool2d(-tgt_masks, kernel_size=k, stride=1, padding=pad)
-            boundary = (max_m - min_m).clamp(min=0.0, max=1.0)
-            band = F.avg_pool2d(boundary, kernel_size=k, stride=1, padding=pad)
-
-        if band.sum() < 1:
-            return {"loss_bap_hf": outputs["pred_masks"].sum() * 0.0}
-
-        # apply boundary mask in spatial domain
-        src_b = (src_prob * band).float()
-        tgt_b = (tgt_masks * band).float()
-
-        # FFT (complex)
-        f_pred = fft.fftshift(fft.fft2(src_b, dim=(-2, -1)), dim=(-2, -1))
-        f_gt = fft.fftshift(fft.fft2(tgt_b, dim=(-2, -1)), dim=(-2, -1))
-
-        eps = 1e-6
-        # high-pass radial mask (normalized radius in [0, ~1])
-        _, _, H, W = f_gt.shape
-        yy, xx = torch.meshgrid(
-            torch.arange(H, device=f_gt.device),
-            torch.arange(W, device=f_gt.device),
-            indexing="ij",
-        )
-        yy = yy.float() - H / 2
-        xx = xx.float() - W / 2
-        rr = torch.sqrt(xx ** 2 + yy ** 2) / (0.5 * min(H, W) + eps)
-        hp_mask = (rr >= hp).float().view(1, 1, H, W)
-
-        # Per-frequency phase cosine penalty.
-        p_pred = f_pred / (torch.abs(f_pred) + eps)
-        p_gt = f_gt / (torch.abs(f_gt) + eps)
-        cos = torch.real(p_pred * torch.conj(p_gt)).clamp(min=-1.0, max=1.0)
-        num = ((1.0 - cos) * hp_mask).sum()
-        den = hp_mask.sum() + eps
-        loss = num / den
+        loss = bap_hf_loss(src_masks, tgt_masks, self.baphf_highpass, self.baphf_band_kernel)
+        if loss is None:  # no boundary pixels in this batch
+            loss = outputs["pred_masks"].sum() * 0.0
         return {"loss_bap_hf": loss}
 
     def _get_src_permutation_idx(self, indices):

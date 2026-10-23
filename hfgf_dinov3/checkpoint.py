@@ -52,15 +52,15 @@ def load_trained_weights(model, path):
 
 
 def initialize_backbone(model, path):
-    """Initialize only the original DINOv3 backbone from official raw weights.
+    """Initialize only the DINOv3 backbone from the official pretrained weights.
 
-    The retained run constructed the independent split head before loading the
-    backbone checkpoint. Its random initialization is intentionally preserved.
+    The split task head is built from the randomly initialized blocks before the
+    backbone weights are loaded, so it keeps its own random initialization.
     This is initialization for a new run, not training-state resumption.
     """
     backbone = model.backbone.backbone
     state = read_state_dict(path)
-    # Official H/16+ stores this fixed buffer in BF16. The original loader
+    # Official H/16+ stores this fixed buffer in BF16. The paper's loader
     # copied it into the model's FP32 buffer without losing precision.
     target = backbone.state_dict().get("rope_embed.periods")
     periods = state.get("rope_embed.periods")

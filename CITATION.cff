@@ -2,6 +2,8 @@ cff-version: 1.2.0
 message: "If you use this code, please cite the accompanying paper."
 title: "HFGF-DINOv3: High-Frequency Guided Fusion and phase-aware loss for camouflaged object detection"
 type: software
+repository-code: "https://github.com/Kkubuck/HFGF-DINOv3"
+license: Apache-2.0
 authors:
   - family-names: Lee
     given-names: Jisang

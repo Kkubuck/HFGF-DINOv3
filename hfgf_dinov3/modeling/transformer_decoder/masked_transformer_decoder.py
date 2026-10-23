@@ -13,9 +13,17 @@ from torch.nn import functional as F
 
 from detectron2.config import configurable
 from detectron2.layers import Conv2d
+from detectron2.utils.registry import Registry
 
 from .position_encoding import PositionEmbeddingSine
-from .maskformer_transformer_decoder import TRANSFORMER_DECODER_REGISTRY
+from .transformer import _get_activation_fn
+
+TRANSFORMER_DECODER_REGISTRY = Registry("TRANSFORMER_MODULE")
+
+
+def build_transformer_decoder(cfg, in_channels, mask_classification=True):
+    name = cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME
+    return TRANSFORMER_DECODER_REGISTRY.get(name)(cfg, in_channels, mask_classification)
 
 
 class SelfAttentionLayer(nn.Module):
@@ -246,17 +254,6 @@ class FFNLayer(nn.Module):
         return self.forward_post(tgt)
 
 
-def _get_activation_fn(activation):
-    """Return an activation function given a string"""
-    if activation == "relu":
-        return F.relu
-    if activation == "gelu":
-        return F.gelu
-    if activation == "glu":
-        return F.glu
-    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")
-
-
 class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)"""
 
@@ -406,7 +403,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
                 mode="bilinear",
                 align_corners=False,
             )
-            # Preserve the released training graph, including normalization and
+            # Keep the paper's training graph, including normalization and
             # foreground/background ordering, for checkpoint reproducibility.
             attn_mask = (attn_mask - attn_mask.min()) / (
                 attn_mask.max() - attn_mask.min()

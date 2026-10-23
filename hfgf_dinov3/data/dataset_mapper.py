@@ -22,7 +22,7 @@ class HFGFDatasetMapper:
     """Apply training transforms and construct two class-specific mask targets.
 
     Semantic labels are 0 for foreground, 1 for background, and 255 for ignored
-    padding. ``size_divisibility`` is the fixed output side in the retained
+    padding. ``size_divisibility`` is the fixed output side in the training
     training recipe: padding on the bottom/right also crops larger dimensions.
     """
 
@@ -79,7 +79,7 @@ class HFGFDatasetMapper:
         if self.is_train:
             if "sem_seg_file_name" not in dataset_dict:
                 raise ValueError(f"Missing semantic labels for {dataset_dict['file_name']}")
-            # Float64 preserves the original nearest-neighbor transform path.
+            # Float64 keeps the nearest-neighbor transform path used in the paper.
             semantic = utils.read_image(dataset_dict.pop("sem_seg_file_name")).astype("double")
         aug_input = T.AugInput(image, sem_seg=semantic)
         aug_input, _ = T.apply_transform_gens(self.tfm_gens, aug_input)

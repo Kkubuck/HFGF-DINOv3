@@ -3,7 +3,7 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 #
-# Modified for HFGF-DINOv3: retain only the ViT backbone runtime.
+# Modified for HFGF-DINOv3: keep only the ViT backbone runtime.
 
 from dinov3.hub.backbones import dinov3_vith16plus
 

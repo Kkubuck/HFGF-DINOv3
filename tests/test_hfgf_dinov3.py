@@ -13,7 +13,7 @@ import torch
 from torch import nn
 
 from hfgf_dinov3.checkpoint import load_trained_weights
-from hfgf_dinov3.evaluation.utils import calc_metrics
+from hfgf_dinov3.evaluation.metrics import calc_metrics
 
 
 class ReleaseTests(unittest.TestCase):
