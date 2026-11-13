@@ -190,7 +190,6 @@ HFGF-DINOv3/
 │   └── modeling/                 # backbone, HFGF, BaP-HF, Mask2Former decoder
 ├── third_party/dinov3/           # DINOv3 ViT runtime (DINOv3 License)
 ├── tools/                        # prepare_datasets, predict, evaluate_predictions
-├── tests/                        # CPU unit tests: python -m unittest discover -s tests
 └── train_net.py                  # training and --eval-only evaluation
 ```
 
